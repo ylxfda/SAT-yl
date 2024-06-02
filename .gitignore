@@ -6,7 +6,11 @@ __pycache__/
 # images
 *.png
 *.nii.gz
+*.nii
 *.pth
+
+# demo folder
+demo/**
 
 # C extensions
 *.so

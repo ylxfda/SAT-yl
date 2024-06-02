@@ -11,8 +11,16 @@ from pathlib import Path
 import nibabel as nib
 import shutil
 from scipy.ndimage import gaussian_filter
-
+# from monai.transforms import ResampleToMatch, EnsureChannelFirstd, Compose, LoadImaged, SaveImaged, Spacingd
+import scipy.ndimage as ndimage
 from train.dist import is_master
+
+def resample_3d(img, target_size):
+    imx, imy, imz = img.shape
+    tx, ty, tz = target_size
+    zoom_ratio = (float(tx) / float(imx), float(ty) / float(imy), float(tz) / float(imz))
+    img_resampled = ndimage.zoom(img, zoom_ratio, order=0, prefilter=False)
+    return img_resampled
 
 def compute_gaussian(tile_size, sigma_scale: float = 1. / 8, value_scaling_factor: float = 10, dtype=np.float16):
     tmp = np.zeros(tile_size)
@@ -123,16 +131,29 @@ def inference(model, text_encoder, device, testset, testloader, nib_dir):
                 results += prediction[j, :, :, :] * (j+1)   # 0 --> 1 (skip background)
                 Path(f'{nib_dir}/{dataset_name}/seg_{sample_id}').mkdir(exist_ok=True, parents=True)
                 # 每个label单独一个nii.gz
-                segobj = nib.nifti2.Nifti1Image(prediction[j, :, :, :], np.eye(4))
+                segobj = nib.nifti2.Nifti1Image(prediction[j, :, :, :], np.diag([1, 1, 2, 1]))
                 nib.save(segobj, f'{nib_dir}/{dataset_name}/seg_{sample_id}/{label}.nii.gz')
                 
-            segobj = nib.nifti2.Nifti1Image(results, np.eye(4))
-            nib.save(segobj, f'{nib_dir}/{dataset_name}/seg_{sample_id}.nii.gz')
+            # read the header of the original image
+            img = nib.load(batch['image_path'])
             
-            image = batch['image'].numpy()
-            if image.ndim == 4:
-                image = image[0, :, :, :]   # h w d
-            imgobj = nib.nifti2.Nifti1Image(image, np.eye(4))
-            nib.save(imgobj, f'{nib_dir}/{dataset_name}/img_{sample_id}.nii.gz')
+            # resample the prediction to original resolution
+            seg_resampled = resample_3d(results, img.header.get_data_shape())
+            for ax in range(3):
+                if img.affine[ax, ax] < 0:
+                    seg_resampled = np.flip(seg_resampled, axis=ax)
+            seg_resampled = nib.Nifti1Image(seg_resampled.astype(np.uint8), header=img.header, affine=img.affine)        
+            seg_resampled.header.set_data_dtype(np.uint8)      
+            # seg_resampled = nib.as_closest_canonical(seg_resampled)              
+            nib.save(seg_resampled, f'{nib_dir}/{dataset_name}/seg_{sample_id}.nii.gz')
+                
+            # segobj = nib.nifti2.Nifti1Image(results, np.diag([1, 1, 2, 1]))
+            # nib.save(segobj, f'{nib_dir}/{dataset_name}/seg_{sample_id}.nii.gz')
+            
+            # image = batch['image'].numpy()
+            # if image.ndim == 4:
+            #     image = image[0, :, :, :]   # h w d
+            # imgobj = nib.nifti2.Nifti1Image(image, np.eye(4))
+            # nib.save(imgobj, f'{nib_dir}/{dataset_name}/img_{sample_id}.nii.gz')
                 
         torch.cuda.empty_cache()    

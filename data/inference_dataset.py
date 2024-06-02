@@ -81,11 +81,11 @@ def load_image(datum):
     
     monai_loader = monai.transforms.Compose(
             [
-                monai.transforms.LoadImaged(keys=['image']),
+                monai.transforms.LoadImaged(keys=['image'], image_only=False),
                 monai.transforms.EnsureChannelFirstD(channel_dim='no_channel', keys=['image']),
                 monai.transforms.Orientationd(axcodes=orientation_code, keys=['image']),   # zyx
-                monai.transforms.Spacingd(keys=["image"], pixdim=(1, 1, 3), mode=("bilinear")),
-                monai.transforms.CropForegroundd(keys=["image"], source_key="image"),
+                monai.transforms.Spacingd(keys=["image"], pixdim=(1.0, 1.0, 2.0), mode=("bilinear"), recompute_affine=True),
+                # monai.transforms.CropForegroundd(keys=["image"], source_key="image", return_coords=True),
                 monai.transforms.ToTensord(keys=["image"]),
             ]
         )
@@ -93,7 +93,7 @@ def load_image(datum):
     img = dictionary['image']
     img = Normalization(img, datum['modality'].lower())
     
-    return img, datum['label'], datum['modality'], datum['image']
+    return img, datum['label'], datum['modality'], datum['image'] #, dictionary['image_meta_dict']
         
 class Inference_Dataset(Dataset):
     def __init__(self, jsonl_file, max_queries=256, batch_size=2, patch_size=[288, 288, 96]):
@@ -201,6 +201,8 @@ class Inference_Dataset(Dataset):
             'labels':labels,
             'chwd':[c,h,w,d],
             'modality':modality,
+            'image_path':image_path,
+            # 'ori_meta':ori_meta,
             }
         
 def collate_fn(data):

@@ -148,16 +148,11 @@ def inference(model, text_encoder, device, testset, testloader, nib_dir):
                 results += prediction[j, :, :, :] * (j+1)   # 0 --> 1 (skip background)
                 Path(f'{nib_dir}/{dataset_name}/seg_{sample_id}').mkdir(exist_ok=True, parents=True)
                 # 每个label单独一个nii.gz
-                # segobj = nib.nifti2.Nifti1Image(prediction[j, :, :, :], np.diag([1, 1, 2, 1]))    
-                label = label.replace(' ', '_')            
-                resample_seg_3d(prediction[j, :, :, :], img.header, img.affine,
-                                f'{nib_dir}/{dataset_name}/seg_{sample_id}/{label}.nii.gz')                            
-            
-            # resample the prediction to original resolution             
-            resample_seg_3d(results, img.header, img.affine, f'{nib_dir}/{dataset_name}/seg_{sample_id}.nii.gz')
+                segobj = nib.nifti2.Nifti1Image(prediction[j, :, :, :], np.eye(4))
+                nib.save(segobj, f'{nib_dir}/{dataset_name}/seg_{sample_id}/{label}.nii.gz')
                 
-            # segobj = nib.nifti2.Nifti1Image(results, np.diag([1, 1, 2, 1]))
-            # nib.save(segobj, f'{nib_dir}/{dataset_name}/seg_{sample_id}.nii.gz')
+            segobj = nib.nifti2.Nifti1Image(results, np.eye(4))
+            nib.save(segobj, f'{nib_dir}/{dataset_name}/seg_{sample_id}.nii.gz')
             
             # image = batch['image'].numpy()
             # if image.ndim == 4:

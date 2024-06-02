@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+
+        {
+            "name": "infer",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/",
+            "program": "/data/home/yli/venvs/sat/bin/torchrun",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "2",
+            },
+            "args": [
+                "./inference.py",
+                "--rcd_dir", "/data/home/yli/projects/SAT-yl/demo/inference_demo/results/",
+                "--datasets_jsonl", "/data/home/yli/projects/SAT-yl/demo/inference_demo/demo.jsonl",
+                "--vision_backbone", "UNET",
+                "--checkpoint", "/data/home/yli/projects/SAT-yl/pretrained/nano/SAT_Nano.pth",
+                "--text_encoder", "ours",
+                "--text_encoder_checkpoint", "/data/home/yli/projects/SAT-yl/pretrained/text_encoder.pth",
+                // "--tokenizer_path", "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+                "--max_queries", "256",
+                "--batchsize_3d", "1",
+                "--gpu", "2",
+            ]
+        },
+    ]
+}

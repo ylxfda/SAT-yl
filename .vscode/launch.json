@@ -66,5 +66,33 @@
                 "--gpu", "2",
             ]
         },
+
+        {
+            "name": "train",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/",
+            "program": "/data/home/yli/venvs/sat/bin/torchrun",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "2",
+            },
+            "args": [
+                "./train.py",
+                // "--rcd_dir", "/data/home/yli/projects/SAT-yl/demo/inference_demo/results/",
+                "--datasets_jsonl", "/data/home/yli/projects/SAT-DS/jsonl_files/HAN_Seg.jsonl",
+                "--vision_backbone", "UNET-L",
+                "--checkpoint", "/data/home/yli/projects/SAT-yl/pretrained/pro/SAT_Pro.pth",
+                "--text_encoder", "ours",
+                "--text_encoder_checkpoint", "/data/home/yli/projects/SAT-yl/pretrained/pro/text_encoder.pth",
+                // "--tokenizer_path", "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+                "--dataset_config", "/data/home/yli/projects/SAT-yl/data_json/dataset_config.json",
+                "--log_dir", "/data/home/yli/projects/SAT-yl/log/",
+                "--max_queries", "256",
+                "--batchsize_3d", "1",
+                "--gpu", "2",
+            ]
+        },
     ]
 }

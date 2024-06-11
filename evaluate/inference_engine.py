@@ -15,12 +15,25 @@ from scipy.ndimage import gaussian_filter
 import scipy.ndimage as ndimage
 from train.dist import is_master
 
-def resample_3d(img, target_size):
+def resample_seg_3d(img, target_header, affine, file_path):
+    '''
+    Resample the prediction to the original resolution and save to match the original image
+    img: prediction mask, 3d numpy array
+    target_header: the header of the original image
+    file_path: the path to save the resampled prediction
+    '''
     imx, imy, imz = img.shape
-    tx, ty, tz = target_size
+    tx, ty, tz = target_header.get_data_shape()
     zoom_ratio = (float(tx) / float(imx), float(ty) / float(imy), float(tz) / float(imz))
-    img_resampled = ndimage.zoom(img, zoom_ratio, order=0, prefilter=False)
-    return img_resampled
+    seg_resampled = ndimage.zoom(img, zoom_ratio, order=0, prefilter=False)
+    
+    for ax in range(3):
+        if affine[ax, ax] < 0:
+            seg_resampled = np.flip(seg_resampled, axis=ax)
+    seg_resampled = nib.Nifti1Image(seg_resampled.astype(np.uint8), header=target_header, affine=affine)        
+    seg_resampled.header.set_data_dtype(np.uint8)      
+    # seg_resampled = nib.as_closest_canonical(seg_resampled)              
+    nib.save(seg_resampled, file_path)
 
 def compute_gaussian(tile_size, sigma_scale: float = 1. / 8, value_scaling_factor: float = 10, dtype=np.float16):
     tmp = np.zeros(tile_size)
@@ -125,27 +138,23 @@ def inference(model, text_encoder, device, testset, testloader, nib_dir):
             
             # visualization  
             Path(f'{nib_dir}/{dataset_name}').mkdir(exist_ok=True, parents=True)
+            
+            # read the header of the original image
+            img = nib.load(batch['image_path'])
+            
             # 将image、gt和prediction保存下来
             results = np.zeros((h, w, d)) # hwd
             for j, label in enumerate(labels):
                 results += prediction[j, :, :, :] * (j+1)   # 0 --> 1 (skip background)
                 Path(f'{nib_dir}/{dataset_name}/seg_{sample_id}').mkdir(exist_ok=True, parents=True)
                 # 每个label单独一个nii.gz
-                segobj = nib.nifti2.Nifti1Image(prediction[j, :, :, :], np.diag([1, 1, 2, 1]))
-                nib.save(segobj, f'{nib_dir}/{dataset_name}/seg_{sample_id}/{label}.nii.gz')
-                
-            # read the header of the original image
-            img = nib.load(batch['image_path'])
+                # segobj = nib.nifti2.Nifti1Image(prediction[j, :, :, :], np.diag([1, 1, 2, 1]))    
+                label = label.replace(' ', '_')            
+                resample_seg_3d(prediction[j, :, :, :], img.header, img.affine,
+                                f'{nib_dir}/{dataset_name}/seg_{sample_id}/{label}.nii.gz')                            
             
-            # resample the prediction to original resolution
-            seg_resampled = resample_3d(results, img.header.get_data_shape())
-            for ax in range(3):
-                if img.affine[ax, ax] < 0:
-                    seg_resampled = np.flip(seg_resampled, axis=ax)
-            seg_resampled = nib.Nifti1Image(seg_resampled.astype(np.uint8), header=img.header, affine=img.affine)        
-            seg_resampled.header.set_data_dtype(np.uint8)      
-            # seg_resampled = nib.as_closest_canonical(seg_resampled)              
-            nib.save(seg_resampled, f'{nib_dir}/{dataset_name}/seg_{sample_id}.nii.gz')
+            # resample the prediction to original resolution             
+            resample_seg_3d(results, img.header, img.affine, f'{nib_dir}/{dataset_name}/seg_{sample_id}.nii.gz')
                 
             # segobj = nib.nifti2.Nifti1Image(results, np.diag([1, 1, 2, 1]))
             # nib.save(segobj, f'{nib_dir}/{dataset_name}/seg_{sample_id}.nii.gz')

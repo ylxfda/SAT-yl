@@ -3,18 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# images
-*.png
-*.nii.gz
-*.nii
-*.pth
-
-# demo folder
-demo/**
-log/**
-
 # C extensions
 *.so
+
+log/
+*.pth
+*.nii.gz
 
 # Distribution / packaging
 .Python

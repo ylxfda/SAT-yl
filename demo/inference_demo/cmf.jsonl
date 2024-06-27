@@ -1,0 +1,3 @@
+{"image": "/data/home/yli/projects/SAT-yl/demo/inference_demo/CMF00010_0000.nrrd", "label": ["carotid artery", "internal carotid artery", "cervical vertebrae", "vertebrae"], "modality": "ct", "dataset":"CMF"}
+{"image": "/data/home/yli/projects/SAT-yl/demo/inference_demo/CT_CMF00100_0000.nii.gz", "label": ["carotid artery", "internal carotid artery", "cervical vertebrae", "vertebrae"], "modality": "ct", "dataset":"CMF"}
+{"image": "/data/home/yli/projects/SAT-yl/demo/inference_demo/CT_CMF00109_0000.nii.gz", "label": ["carotid artery", "internal carotid artery", "cervical vertebrae", "vertebrae"], "modality": "ct", "dataset":"CMF"}

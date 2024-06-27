@@ -25,8 +25,9 @@
             },
             "args": [
                 "./inference.py",
-                "--rcd_dir", "/data/home/yli/projects/SAT-yl/demo/inference_demo/results/",
-                "--datasets_jsonl", "/data/home/yli/projects/SAT-yl/demo/inference_demo/cmf.jsonl",
+                "--rcd_dir", "/data/datasets/nnunet_cmf/Dataset005_cmf_nii/SAT_pred/",
+                // "--datasets_jsonl", "/data/home/yli/projects/SAT-yl/demo/inference_demo/cmf.jsonl",
+                "--datasets_jsonl", "/data/datasets/nnunet_cmf/Dataset005_cmf_nii/images.jsonl",
                 "--vision_backbone", "UNET-L",
                 "--checkpoint", "/data/home/yli/projects/SAT-yl/pretrained/pro/SAT_Pro.pth",
                 "--text_encoder", "ours",
@@ -34,7 +35,7 @@
                 // "--tokenizer_path", "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
                 "--max_queries", "256",
                 "--batchsize_3d", "1",
-                "--gpu", "2",
+                "--gpu", "2,3",
             ]
         },
 

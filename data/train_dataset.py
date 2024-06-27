@@ -90,7 +90,7 @@ class Med_SAM_Dataset(Dataset):
             # repeat times for label num
             query_repeat_times = max(1, (len(sample['label']) / max_queries))
             # repeat times for roi size
-            if sample['roi_y1x1z1_y2x2z2']:
+            if 'roi_y1x1z1_y2x2z2' in sample:
                 y1, x1, z1, y2, x2, z2 = sample['roi_y1x1z1_y2x2z2']
                 h_repeat_times = max(1, ((y2-y1) / crop_size[0]))
                 w_repeat_times = max(1, ((x2-x1) / crop_size[1]))
